@@ -1,9 +1,7 @@
 use std::f64::consts::PI;
-use std::ops::{Neg, Mul, Add, Sub, Div};
-
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 const EPSILON: f64 = 1e-5;
-
 
 #[derive(Copy, Clone)]
 struct Vector {
@@ -13,7 +11,7 @@ struct Vector {
 }
 
 fn vector(x: f64, y: f64, z: f64) -> Vector {
-    Vector{x, y, z}
+    Vector { x, y, z }
 }
 
 fn radians(degrees: f64) -> f64 {
@@ -22,32 +20,32 @@ fn radians(degrees: f64) -> f64 {
 
 impl Vector {
     fn length(self) -> f64 {
-        (self.x*self.x + self.y*self.y + self.y*self.y).sqrt()
+        (self.x * self.x + self.y * self.y + self.y * self.y).sqrt()
     }
 
     fn norm(self) -> Self {
         let invert = 1.0 / self.length();
-        self*invert
+        self * invert
     }
 
     fn dot(self, rhs: Self) -> f64 {
-        self.x*rhs.x + self.y*rhs.y + self.z*rhs.z
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
     fn clamp(self, min: f64, max: f64) -> Self {
         vector(
             self.x.clamp(min, max),
             self.y.clamp(min, max),
-            self.z.clamp(min, max)
+            self.z.clamp(min, max),
         )
     }
 
     fn pow(self, power: f64) -> Self {
-        vector(
-            self.x.powf(power),
-            self.y.powf(power),
-            self.z.powf(power)
-        )
+        Vector {
+            x: self.x.powf(power),
+            y: self.y.powf(power),
+            z: self.z.powf(power),
+        }
     }
 
     fn splat(scalar: f64) -> Vector {
