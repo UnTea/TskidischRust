@@ -6,9 +6,9 @@ use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub struct Image {
-    pixels: Vec<Vector>,
-    width: usize,
-    height: usize,
+    pub pixels: Vec<Vector>,
+    pub width: usize,
+    pub height: usize,
 }
 
 impl Image {

@@ -1,39 +1,95 @@
 use crate::image::Image;
 use crate::linmath::Vector;
-use png::Reader;
+use byteorder::{BigEndian, ReadBytesExt};
 use std::error::Error;
 use std::fs::File;
-use std::io;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 #[derive(Debug)]
 pub struct Header {
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
 }
 
-pub fn load_hdr<T: AsRef<Path>>(path: T) {
+pub fn load_hdr<T: AsRef<Path>>(path: T) -> Image {
     let file = File::open(path).unwrap();
     let mut reader = BufReader::new(file);
 
     let header = Header::parse_header(&mut reader).unwrap();
+
+    let mut image = Image::new(header.width, header.height);
+
+    for y in 0..header.height {
+        unpack_rle_scanline(y, &mut reader, &mut image)
+    }
+
+    image
 }
 
-pub fn unpack_rle_scanline() {
-    todo!()
+pub fn unpack_rle_scanline<B: BufRead>(y: usize, reader: &mut B, image: &mut Image) {
+    let mut red = vec![0; image.width];
+    let mut green = vec![0; image.width];
+    let mut blue = vec![0; image.width];
+    let mut exp = vec![0; image.width];
+
+    let new_rle_indicator = reader.read_u16::<BigEndian>().unwrap();
+
+    if new_rle_indicator != 0x0202 {
+        panic!(
+            "Wrong RLE indicator {}, only New RLE HDRs are supported",
+            new_rle_indicator
+        );
+    }
+
+    let scanline_width = reader.read_u16::<BigEndian>().unwrap();
+
+    if scanline_width as usize != image.width {
+        panic!("Bad scanline width {}", scanline_width);
+    }
+
+    for i in 0..4 {
+        let mut x = 0;
+        let color = [&mut red, &mut green, &mut blue, &mut exp];
+
+        while x < image.width {
+            let mut count = reader.read_u8().unwrap();
+
+            if count > 128 {
+                count &= 0x7F;
+                let value = reader.read_u8().unwrap();
+
+                for j in 0..count {
+                    color[i][x] = value;
+                    x += 1;
+                }
+            } else {
+                for j in 0..count {
+                    color[i][x] = reader.read_u8().unwrap();
+                    x += 1;
+                }
+            }
+        }
+    }
+
+    for x in 0..image.width {
+        let color = decode_rgbe(red[x], green[x], blue[x], exp[x]);
+        image.set_pixel(x, y, color);
+    }
 }
 
-pub fn decode_rgbe() -> Vector {
-    todo!()
-}
+pub fn decode_rgbe(r: u8, g: u8, b: u8, e: u8) -> Vector {
+    let diff = 128.0 + 8.0;
+    let exp = 2.0_f64.powf(e as f64 - diff);
+    let r_decoded = r as f64 * exp;
+    let g_decoded = g as f64 * exp;
+    let b_decoded = b as f64 * exp;
 
-pub fn read_u16() -> u16 {
-    todo!()
-}
-
-pub fn read_u8() -> u8 {
-    todo!()
+    Vector {
+        x: r_decoded,
+        y: g_decoded,
+        z: b_decoded,
+    }
 }
 
 impl Header {

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::hdr::{load_hdr, Header};
+use crate::hdr::load_hdr;
 
 mod hdr;
 mod image;
