@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-const EPSILON: f64 = 1e-5;
+pub const EPSILON: f64 = 1e-5;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Vector {

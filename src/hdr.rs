@@ -1,6 +1,6 @@
 use crate::image::Image;
 use crate::linmath::Vector;
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use byteorder::{BigEndian, ReadBytesExt};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
