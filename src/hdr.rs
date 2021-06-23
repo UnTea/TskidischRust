@@ -1,7 +1,7 @@
 use crate::image::Image;
 use crate::linmath::Vector;
+use anyhow::{Result, bail};
 use byteorder::{BigEndian, ReadBytesExt};
-use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -21,31 +21,28 @@ pub fn load_hdr<T: AsRef<Path>>(path: T) -> Image {
     let mut image = Image::new(header.width, header.height);
 
     for y in 0..header.height {
-        unpack_rle_scanline(y, &mut reader, &mut image)
+        unpack_rle_scanline(y, &mut reader, &mut image).unwrap();
     }
 
     image
 }
 
-pub fn unpack_rle_scanline<B: BufRead>(y: usize, reader: &mut B, image: &mut Image) {
+pub fn unpack_rle_scanline<B: BufRead>(y: usize, reader: &mut B, image: &mut Image) -> Result<()> {
     let mut red = vec![0; image.width];
     let mut green = vec![0; image.width];
     let mut blue = vec![0; image.width];
     let mut exp = vec![0; image.width];
 
-    let new_rle_indicator = reader.read_u16::<BigEndian>().unwrap();
+    let new_rle_indicator = reader.read_u16::<BigEndian>()?;
 
     if new_rle_indicator != 0x0202 {
-        panic!(
-            "Wrong RLE indicator {}, only New RLE HDRs are supported",
-            new_rle_indicator
-        );
+        bail!("Bad rle indicator {}", new_rle_indicator);
     }
 
-    let scanline_width = reader.read_u16::<BigEndian>().unwrap();
+    let scanline_width = reader.read_u16::<BigEndian>()?;
 
     if scanline_width as usize != image.width {
-        panic!("Bad scanline width {}", scanline_width);
+        bail!("Bad scanline width {}", scanline_width);
     }
 
     for i in 0..4 {
@@ -59,12 +56,12 @@ pub fn unpack_rle_scanline<B: BufRead>(y: usize, reader: &mut B, image: &mut Ima
                 count &= 0x7F;
                 let value = reader.read_u8().unwrap();
 
-                for j in 0..count {
+                for _ in 0..count {
                     color[i][x] = value;
                     x += 1;
                 }
             } else {
-                for j in 0..count {
+                for _ in 0..count {
                     color[i][x] = reader.read_u8().unwrap();
                     x += 1;
                 }
@@ -76,6 +73,8 @@ pub fn unpack_rle_scanline<B: BufRead>(y: usize, reader: &mut B, image: &mut Ima
         let color = decode_rgbe(red[x], green[x], blue[x], exp[x]);
         image.set_pixel(x, y, color);
     }
+
+    Ok(())
 }
 
 pub fn decode_rgbe(r: u8, g: u8, b: u8, e: u8) -> Vector {
@@ -93,12 +92,12 @@ pub fn decode_rgbe(r: u8, g: u8, b: u8, e: u8) -> Vector {
 }
 
 impl Header {
-    pub fn parse_header<B: BufRead>(reader: &mut B) -> Result<Self, Box<dyn Error>> {
+    pub fn parse_header<B: BufRead>(reader: &mut B) -> Result<Self> {
         let mut buf = String::new();
         reader.read_line(&mut buf)?;
 
         if buf.trim() != "#?RADIANCE" {
-            panic!("{} is not a .hdr file", buf);
+            bail!("{} is not a .hdr file", buf);
         }
 
         for lined in reader.lines() {
@@ -115,7 +114,7 @@ impl Header {
             let mut parts = lined.split("=");
 
             if parts.nth(1).unwrap() != "32-bit_rle_rgbe" {
-                panic!("Does not match 32-bit_rle_rgbe format");
+                bail!("Does not match 32-bit_rle_rgbe format");
             }
         }
 
