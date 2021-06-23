@@ -25,7 +25,7 @@ impl Image {
     }
 
     pub fn get_pixel(&self, x: usize, y: usize) -> Vector {
-        self.pixels[x + y + self.width]
+        self.pixels[x + y * self.width]
     }
 
     pub fn get_pixel_uv(&self, u: f64, v: f64) -> Vector {

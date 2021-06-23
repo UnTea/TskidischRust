@@ -3,7 +3,6 @@ use crate::linmath::Vector;
 use crate::primitives::Primitives;
 use rand::rngs::ThreadRng;
 use rand::Rng;
-use std::ops::{Add, Mul, Neg};
 
 pub struct Ray {
     pub direction: Vector,
@@ -12,11 +11,11 @@ pub struct Ray {
 
 impl Ray {
     fn point_at(&self, t: f64) -> Vector {
-        self.origin.add(self.direction.mul(t))
+        self.origin + self.direction * t
     }
 }
 
-fn random_vector_in_hemisphere(normal: Vector, random: &mut ThreadRng) -> Vector {
+pub fn random_vector_in_hemisphere(normal: Vector, random: &mut ThreadRng) -> Vector {
     loop {
         let random_vector = Vector {
             x: random.gen(),
@@ -24,7 +23,7 @@ fn random_vector_in_hemisphere(normal: Vector, random: &mut ThreadRng) -> Vector
             z: random.gen(),
         };
 
-        let random_vector = random_vector.mul(2.0).add(Vector::splat(-1.0));
+        let random_vector = random_vector * 2.0 + Vector::splat(-1.0);
 
         if random_vector.dot(random_vector) > 1.0 {
             continue;
@@ -34,14 +33,14 @@ fn random_vector_in_hemisphere(normal: Vector, random: &mut ThreadRng) -> Vector
             return random_vector.norm();
         }
 
-        return random_vector.neg().norm();
+        return -random_vector.norm();
     }
 }
 
-fn trace_ray(
+pub fn trace_ray(
     primitives: &mut [Box<dyn Primitives>],
     ray: &Ray,
-    environment_map: Image,
+    environment_map: &Image,
     random: &mut ThreadRng,
 ) -> Vector {
     let (primitive, t) = find_intersect(primitives, ray);
@@ -52,7 +51,7 @@ fn trace_ray(
             f64::sqrt(ray.direction.x * ray.direction.x + ray.direction.z * ray.direction.z);
         let theta = f64::atan2(ray.direction.y, omega);
 
-        environment_map.get_pixel_by_spherical_coordinates(phi, theta);
+        return environment_map.get_pixel_by_spherical_coordinates(phi, theta);
     }
 
     let ray = Ray {
@@ -60,14 +59,12 @@ fn trace_ray(
         origin: ray.point_at(t),
     };
 
-    let color = primitive
-        .albedo()
-        .mul(trace_ray(primitives, &ray, environment_map, random));
+    let color = primitive.albedo() * trace_ray(primitives, &ray, environment_map, random);
 
     color
 }
 
-fn find_intersect<'a>(
+pub fn find_intersect<'a>(
     primitive: &'a [Box<dyn Primitives>],
     ray: &Ray,
 ) -> (&'a dyn Primitives, f64) {

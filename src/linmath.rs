@@ -20,7 +20,7 @@ impl Vector {
     }
 
     pub fn length(self) -> f64 {
-        (self.x * self.x + self.y * self.y + self.y * self.y).sqrt()
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
     pub fn norm(self) -> Self {
