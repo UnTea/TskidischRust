@@ -19,7 +19,8 @@ fn main() {
         Vector::new(1.0, 1.0, 1.0),
     ))];
 
-    let environment_map = load_hdr("wooden_lounge_1k.hdr");
+    //let environment_map = load_hdr("wooden_lounge_1k.hdr");
+    let environment_map = load_hdr("comfy_cafe_16k.hdr");
     let output = render::render(&mut primitives, &environment_map);
     output.save("image.png");
 }

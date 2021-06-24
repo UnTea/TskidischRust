@@ -45,7 +45,6 @@ impl Image {
 
         for y in 0..self.height {
             for x in 0..self.width {
-                //filmFramebuffer := ACESFilm(img[x+y*width])
                 let vec = self.get_pixel(x, y).pow(1.0 / 2.2).clamp(0.0, 1.0);
                 buffer[3 * (x + y * self.width) + 0] = (vec.x * 255.0) as u8;
                 buffer[3 * (x + y * self.width) + 1] = (vec.y * 255.0) as u8;
@@ -63,4 +62,15 @@ impl Image {
         let mut writer = encoder.write_header().unwrap();
         writer.write_image_data(&buffer).unwrap();
     }
+}
+
+fn aces_film(color: Vector) -> Vector {
+    let a = 2.51;
+    let b = Vector::new(0.03, 0.03, 0.03);
+    let c = 2.43;
+    let d = Vector::new(0.59, 0.59, 0.59);
+    let e = Vector::new(0.14, 0.14, 0.14);
+    let nominator = color * (color * a + b);
+    let denominator = color * (color * c + d) + e;
+    nominator / denominator
 }
