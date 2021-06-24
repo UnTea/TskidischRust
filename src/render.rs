@@ -6,14 +6,16 @@ use rand::Rng;
 
 const WIDTH: usize = 1024;
 const HEIGHT: usize = 780;
-const SAMPLE_COUNT: usize = 32;
+const SAMPLE_COUNT: usize = 1;
 const FIELD_OF_VIEW: f64 = 120.0;
 
 pub fn render(primitives: &mut [Box<dyn Primitive>], environment_map: &Image) -> Image {
     let mut image = Image::new(WIDTH, HEIGHT);
 
-    for line_number in 0..image.height / 100 {
-        tile(primitives, environment_map, &mut image, line_number)
+    for y in 0..image.height / 100 + 1 {
+        for x in 0..image.width / 100 + 1 {
+            tile(primitives, environment_map, &mut image, x, y)
+        }
     }
 
     image
@@ -23,15 +25,21 @@ fn tile(
     primitives: &mut [Box<dyn Primitive>],
     environment_map: &Image,
     image: &mut Image,
-    line_number: usize,
+    tile_x: usize,
+    tile_y: usize,
 ) {
     let aspect_ratio = (image.width as f64) / (image.height as f64);
     let mut random = rand::thread_rng();
 
-    for line in 0..100 {
-        let y = line_number * 100 + line;
+    for relative_x in 0..100 {
+        for relative_y in 0..100 {
+            let x = tile_x * 100 + relative_x;
+            let y = tile_y * 100 + relative_y;
 
-        for x in 0..image.width {
+            if x >= image.width || y >= image.height {
+                continue
+            }
+
             let mut sum = Vector::new(0.0, 0.0, 0.0);
 
             for _ in 0..SAMPLE_COUNT {
