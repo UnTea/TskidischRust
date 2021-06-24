@@ -1,7 +1,7 @@
 use crate::linmath::{Vector, EPSILON};
 use crate::raytracing::Ray;
 
-pub trait Primitive {
+pub trait Primitive: Send + Sync + 'static {
     fn normal(&self, intersection: Vector) -> Vector;
     fn ray_intersect(&self, ray: &Ray) -> f64;
     fn albedo(&self) -> Vector;

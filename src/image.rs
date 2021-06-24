@@ -3,10 +3,12 @@ use std::f64::consts::PI;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
+use std::cell::Cell;
+use std::borrow::BorrowMut;
 
 #[derive(Clone, Debug)]
 pub struct Image {
-    pub pixels: Vec<Vector>,
+    pub pixels: Cell<Vec<Vector>>,
     pub width: usize,
     pub height: usize,
 }
@@ -14,13 +16,21 @@ pub struct Image {
 impl Image {
     pub fn new(width: usize, height: usize) -> Image {
         Image {
-            pixels: vec![Vector::new(0.0, 0.0, 0.0); width * height],
+            pixels: Cell::new(vec![Vector::new(0.0, 0.0, 0.0); width * height]),
             width,
             height,
         }
     }
 
+    fn pixels(&self) -> BorrowMut<<Vec<Vector>> {
+        self.pixels.borrow_mut()
+    }
+
     pub fn set_pixel(&mut self, x: usize, y: usize, color: Vector) {
+        self.pixels[x + y * self.width] = color
+    }
+
+    pub fn set_pixel_really_cool(&self, x: usize, y: usize, color: Vector) {
         self.pixels[x + y * self.width] = color
     }
 

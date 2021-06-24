@@ -3,26 +3,37 @@ use crate::linmath::{radians, Vector};
 use crate::primitives::Primitive;
 use crate::raytracing::{trace_ray, Ray};
 use rand::Rng;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 const WIDTH: usize = 1024;
 const HEIGHT: usize = 780;
 const SAMPLE_COUNT: usize = 1;
 const FIELD_OF_VIEW: f64 = 120.0;
 
-pub fn render(primitives: &mut [Box<dyn Primitive>], environment_map: &Image) -> Image {
-    let mut image = Image::new(WIDTH, HEIGHT);
+//TODO thread pool
 
-    for y in 0..image.height / 100 + 1 {
-        for x in 0..image.width / 100 + 1 {
-            tile(primitives, environment_map, &mut image, x, y)
+pub fn render(primitives: Vec<Arc<dyn Primitive>>, environment_map: Arc<Image>) -> Image {
+    let mut image = Arc::new(Image::new(WIDTH, HEIGHT));
+
+    let handle = thread::spawn(move || {
+        let primitives = primitives;
+        let image = image;
+
+        for y in 0..image.height / 100 + 1 {
+            for x in 0..image.width / 100 + 1 {
+                tile(primitives.as_ref(), environment_map.as_ref(), image, x, y)
+            }
         }
-    }
+    })
+    .join()
+    .unwrap();
 
     image
 }
 
 fn tile(
-    primitives: &mut [Box<dyn Primitive>],
+    primitives: &Vec<Arc<dyn Primitive>>,
     environment_map: &Image,
     image: &mut Image,
     tile_x: usize,

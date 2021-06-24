@@ -3,6 +3,7 @@ use crate::linmath::Vector;
 use crate::primitives::Primitive;
 use rand::rngs::ThreadRng;
 use rand::Rng;
+use std::sync::Arc;
 
 pub struct Ray {
     pub direction: Vector,
@@ -10,6 +11,10 @@ pub struct Ray {
 }
 
 impl Ray {
+    pub(crate) fn new(direction: Vector, origin: Vector) -> Ray {
+        Ray { direction, origin }
+    }
+
     fn point_at(&self, t: f64) -> Vector {
         self.origin + self.direction * t
     }
@@ -33,7 +38,7 @@ pub fn random_vector_in_hemisphere(normal: Vector, random: &mut ThreadRng) -> Ve
 }
 
 pub fn trace_ray(
-    primitives: &mut [Box<dyn Primitive>],
+    primitives: &Vec<Arc<dyn Primitive>>,
     ray: &Ray,
     environment_map: &Image,
     random: &mut ThreadRng,
@@ -63,7 +68,7 @@ pub fn trace_ray(
 }
 
 pub fn find_intersect<'a>(
-    primitives: &'a [Box<dyn Primitive>],
+    primitives: &'a Vec<Arc<dyn Primitive>>,
     ray: &Ray,
 ) -> Option<(&'a dyn Primitive, f64)> {
     primitives
