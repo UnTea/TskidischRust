@@ -1,6 +1,6 @@
 use crate::image::Image;
 use crate::linmath::{radians, Vector};
-use crate::primitives::Primitives;
+use crate::primitives::Primitive;
 use crate::raytracing::{trace_ray, Ray};
 use rand::Rng;
 
@@ -9,7 +9,7 @@ const HEIGHT: usize = 780;
 const SAMPLE_COUNT: usize = 32;
 const FIELD_OF_VIEW: f64 = 120.0;
 
-pub fn render(primitives: &mut [Box<dyn Primitives>], environment_map: &Image) -> Image {
+pub fn render(primitives: &mut [Box<dyn Primitive>], environment_map: &Image) -> Image {
     let mut image = Image::new(WIDTH, HEIGHT);
 
     for line_number in 0..image.height / 100 {
@@ -20,7 +20,7 @@ pub fn render(primitives: &mut [Box<dyn Primitives>], environment_map: &Image) -
 }
 
 fn tile(
-    primitives: &mut [Box<dyn Primitives>],
+    primitives: &mut [Box<dyn Primitive>],
     environment_map: &Image,
     image: &mut Image,
     line_number: usize,

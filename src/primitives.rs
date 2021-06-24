@@ -1,7 +1,7 @@
 use crate::linmath::{Vector, EPSILON};
 use crate::raytracing::Ray;
 
-pub trait Primitives {
+pub trait Primitive {
     fn normal(&self, intersection: Vector) -> Vector;
     fn ray_intersect(&self, ray: &Ray) -> f64;
     fn albedo(&self) -> Vector;
@@ -19,7 +19,7 @@ pub struct Plane {
     pub albedo: Vector,
 }
 
-impl Primitives for Sphere {
+impl Primitive for Sphere {
     fn normal(&self, intersection: Vector) -> Vector {
         intersection - self.center.norm()
     }
@@ -52,7 +52,7 @@ impl Primitives for Sphere {
     }
 }
 
-impl Primitives for Plane {
+impl Primitive for Plane {
     fn normal(&self, _intersection: Vector) -> Vector {
         self.normal
     }

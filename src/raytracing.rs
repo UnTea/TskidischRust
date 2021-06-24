@@ -1,6 +1,6 @@
 use crate::image::Image;
 use crate::linmath::Vector;
-use crate::primitives::Primitives;
+use crate::primitives::Primitive;
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
@@ -38,21 +38,24 @@ pub fn random_vector_in_hemisphere(normal: Vector, random: &mut ThreadRng) -> Ve
 }
 
 pub fn trace_ray(
-    primitives: &mut [Box<dyn Primitives>],
+    primitives: &mut [Box<dyn Primitive>],
     ray: &Ray,
     environment_map: &Image,
     random: &mut ThreadRng,
 ) -> Vector {
-    let (primitive, t) = find_intersect(primitives, ray);
+    let intersection = find_intersect(primitives, ray);
 
-    if t == f64::MAX {
-        let phi = f64::atan2(ray.direction.z, ray.direction.x);
-        let omega =
-            f64::sqrt(ray.direction.x * ray.direction.x + ray.direction.z * ray.direction.z);
-        let theta = f64::atan2(ray.direction.y, omega);
+    let (primitive, t) = match intersection {
+        None => {
+            let phi = f64::atan2(ray.direction.z, ray.direction.x);
+            let omega =
+                f64::sqrt(ray.direction.x * ray.direction.x + ray.direction.z * ray.direction.z);
+            let theta = f64::atan2(ray.direction.y, omega);
 
-        return environment_map.get_pixel_by_spherical_coordinates(phi, theta);
-    }
+            return environment_map.get_pixel_by_spherical_coordinates(phi, theta);
+        }
+        Some(tuple) => tuple,
+    };
 
     let ray = Ray {
         direction: random_vector_in_hemisphere(primitive.normal(ray.point_at(t)), random),
@@ -65,24 +68,12 @@ pub fn trace_ray(
 }
 
 pub fn find_intersect<'a>(
-    primitive: &'a [Box<dyn Primitives>],
+    primitives: &'a [Box<dyn Primitive>],
     ray: &Ray,
-) -> (&'a dyn Primitives, f64) {
-    let mut min_t = f64::MAX;
-    let mut index: usize = 0;
-
-    for i in 0..primitive.len() {
-        let t = primitive[i].ray_intersect(ray);
-
-        if t == -1.0 {
-            continue;
-        }
-
-        if t < min_t {
-            min_t = t;
-            index = i;
-        }
-    }
-
-    (&*primitive[index], min_t)
+) -> Option<(&'a dyn Primitive, f64)> {
+    primitives
+        .iter()
+        .map(|x| (x.as_ref(), x.ray_intersect(ray)))
+        .filter(|(_, t)| *t != -1.0)
+        .min_by(|(_, t1), (_, t2)| t1.partial_cmp(&t2).unwrap())
 }
