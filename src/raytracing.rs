@@ -17,13 +17,8 @@ impl Ray {
 
 pub fn random_vector_in_hemisphere(normal: Vector, random: &mut ThreadRng) -> Vector {
     loop {
-        let random_vector = Vector {
-            x: random.gen(),
-            y: random.gen(),
-            z: random.gen(),
-        };
-
-        let random_vector = random_vector * 2.0 + Vector::splat(-1.0);
+        let mut random_vector = Vector::new(random.gen(), random.gen(), random.gen());
+        random_vector = random_vector * 2.0 + Vector::splat(-1.0);
 
         if random_vector.dot(random_vector) > 1.0 {
             continue;
@@ -57,10 +52,10 @@ pub fn trace_ray(
         Some(tuple) => tuple,
     };
 
-    let ray = Ray {
-        direction: random_vector_in_hemisphere(primitive.normal(ray.point_at(t)), random),
-        origin: ray.point_at(t),
-    };
+    let ray = Ray::new(
+        random_vector_in_hemisphere(primitive.normal(ray.point_at(t)), random),
+        ray.point_at(t),
+    );
 
     let color = primitive.albedo() * trace_ray(primitives, &ray, environment_map, random);
 

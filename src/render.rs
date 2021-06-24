@@ -37,7 +37,7 @@ fn tile(
             let y = tile_y * 100 + relative_y;
 
             if x >= image.width || y >= image.height {
-                continue
+                continue;
             }
 
             let mut sum = Vector::new(0.0, 0.0, 0.0);
@@ -49,17 +49,8 @@ fn tile(
                 let film_u = u * f64::tan(radians(FIELD_OF_VIEW) / 2.0) * aspect_ratio;
                 let film_v = v * f64::tan(radians(FIELD_OF_VIEW) / 2.0);
 
-                let direction = Vector {
-                    x: film_u,
-                    y: film_v,
-                    z: 1.0,
-                }
-                .norm();
-
-                let ray = Ray {
-                    direction,
-                    origin: Vector::new(0.0, 0.0, 0.0),
-                };
+                let direction = Vector::new(film_u, film_v, 1.0).norm();
+                let ray = Ray::new(direction, Vector::new(0.0, 0.0, 0.0));
 
                 let color = trace_ray(primitives, &ray, environment_map, &mut random);
                 sum = sum + color;

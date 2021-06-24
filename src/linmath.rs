@@ -40,12 +40,8 @@ impl Vector {
         )
     }
 
-    pub fn pow(self, power: f64) -> Self {
-        Vector {
-            x: self.x.powf(power),
-            y: self.y.powf(power),
-            z: self.z.powf(power),
-        }
+    pub fn pow(self, power: f64) -> Vector {
+        Vector::new(self.x.powf(power), self.y.powf(power), self.z.powf(power))
     }
 
     pub fn splat(scalar: f64) -> Vector {

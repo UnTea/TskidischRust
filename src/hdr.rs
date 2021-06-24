@@ -15,9 +15,7 @@ pub struct Header {
 pub fn load_hdr<T: AsRef<Path>>(path: T) -> Image {
     let file = File::open(path).unwrap();
     let mut reader = BufReader::new(file);
-
     let header = Header::parse_header(&mut reader).unwrap();
-
     let mut image = Image::new(header.width, header.height);
 
     for y in 0..header.height {
@@ -84,11 +82,7 @@ pub fn decode_rgbe(r: u8, g: u8, b: u8, e: u8) -> Vector {
     let g_decoded = g as f64 * exp;
     let b_decoded = b as f64 * exp;
 
-    Vector {
-        x: r_decoded,
-        y: g_decoded,
-        z: b_decoded,
-    }
+    Vector::new(r_decoded, g_decoded, b_decoded)
 }
 
 impl Header {
